@@ -10,8 +10,9 @@ let results = [];
 
 console.log(`${chalk.whiteBright('🔨 PartyHammer - a quick and dirty utility for firing API calls at RAS-Party with disturbing speed')}
 
-    Firing the cannon.`)
-const nowString = Date.now().toString();
+\t`)
+
+const nowString = `${new Date().toISOString()}`
 
 const reportFileName = `report_${nowString}.txt`;
 const reportStream = fs.createWriteStream(reportFileName);
@@ -29,7 +30,7 @@ const addReportLine = (str) => reportStream.write(str, error =>  {
 addReportLine(`
 PartyHammer Report
 
-Started at ${Date.now()}
+Started at ${nowString}
 
 `)
 
@@ -158,25 +159,27 @@ Object.keys(masterListOfRequests).forEach(group => {
     Promise
         .all(requestPromises)
         .then( () => {
-            responseTimes = results.map(result => result.timeTaken)
+            const theseResults = results.filter(result => result.group === group)
+            responseTimes = theseResults.map(result => result.timeTaken)
+
             addReportLine(`
         
             ${group} Complete.
 
-            Group URL example: ${groupArray[0].url}
+            Group URL example: ${theseResults[0].url}
         
-            Requests made: ${groupArray.length},
-            Requests successful: ${results.filter(res => res.statusCode === 200).length}
+            Requests made: ${theseResults.length},
+            Requests successful: ${theseResults.filter(res => res.statusCode === 200).length}
             
-            Requests zero: ${results.filter(res => res.statusCode === 0).length}
-            Requests 2xx: ${results.filter(res => res.statusCode.toString().startsWith('2')).length}
-            Requests 3xx: ${results.filter(res => res.statusCode.toString().startsWith('3')).length}
-            Requests 4xx: ${results.filter(res => res.statusCode.toString().startsWith('4')).length}
-            Requests 5xx: ${results.filter(res => res.statusCode.toString().startsWith('5')).length}
+            Requests zero: ${theseResults.filter(res => res.statusCode === 0).length}
+            Requests 2xx: ${theseResults.filter(res => res.statusCode.toString().startsWith('2')).length}
+            Requests 3xx: ${theseResults.filter(res => res.statusCode.toString().startsWith('3')).length}
+            Requests 4xx: ${theseResults.filter(res => res.statusCode.toString().startsWith('4')).length}
+            Requests 5xx: ${theseResults.filter(res => res.statusCode.toString().startsWith('5')).length}
         
             Longest response: ${Math.max(...responseTimes)}
             Shortest response ${Math.min(...responseTimes)}
-            Mean avg response: ${responseTimes.reduce((a, b) => (a + b)) / responseTimes.length}
+            Mean avg response: ${responseTimes.reduce((a, b) => (a + b), 0) / responseTimes.length}
             `)
         })
     )

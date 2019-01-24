@@ -37,12 +37,9 @@ const ROOT_URL = 'http://localhost:8081/party-api/v1'
 const checkSuccessCode = (res) => res.statusCode === 200
 
 // Business related
-requests.push( requestMaker(`${ROOT_URL}/businesses?id={{BUSINESSID}}`, headers, null, 'GET', checkSuccessCode, 100, 'Get business by partyId - old') )
-requests.push( requestMaker(`${ROOT_URL}/businesses/id/{{BUSINESSID}}`, headers, null, 'GET', checkSuccessCode, 100, 'Get business by partyId - new') )
-requests.push( requestMaker(`${ROOT_URL}/businesses/ref/{{BUSINESSREF}}`, headers, null, 'GET', checkSuccessCode, 100, 'Get business by business ref'))
-
-// Sample linking
-//requests.push( requestMaker(`${ROOT_URL}/businesses/ref/{{BUSINESSREF}}`, headers, null, 'GET', checkSuccessCode, 10000, 'Get business by business ref', ))
+requests.push( requestMaker(`${ROOT_URL}/businesses?id={{BUSINESSID}}`, headers, null, 'GET', checkSuccessCode, 1000, 'Get business by partyId - old') )
+requests.push( requestMaker(`${ROOT_URL}/businesses/id/{{BUSINESSID}}`, headers, null, 'GET', checkSuccessCode, 1000, 'Get business by partyId - new') )
+requests.push( requestMaker(`${ROOT_URL}/businesses/ref/{{BUSINESSREF}}`, headers, null, 'GET', checkSuccessCode, 1000, 'Get business by business ref'))
 
 
 module.exports = {
