@@ -1,3 +1,5 @@
 node_modules
 results.json
 list.txt
+report_*.txt
+results_*.json

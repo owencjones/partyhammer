@@ -11,6 +11,27 @@ let results = [];
 console.log(`${chalk.whiteBright('🔨 PartyHammer - a quick and dirty utility for firing API calls at RAS-Party with disturbing speed')}
 
     Firing the cannon.`)
+const nowString = Date.now().toString();
+
+const reportFileName = `report_${nowString}.txt`;
+const reportStream = fs.createWriteStream(reportFileName);
+
+reportStream.on('error', error => {
+    console.error('Could not write report', error)
+})
+
+const addReportLine = (str) => reportStream.write(str, error =>  {
+    if (error) {
+        console.error(error)
+    }
+});
+
+addReportLine(`
+PartyHammer Report
+
+Started at ${Date.now()}
+
+`)
 
 const addResult = (group, url, response, body, startTime, endTime, success) => {
     const resultsObj = {
@@ -44,7 +65,14 @@ const replaceVariables = (url) => {
         let variablesInUrl = matches.map(match => match.replace(/[{}]/g, ''))
         variablesInUrl.forEach(variableName => {
             if (variableName in requestConfig.variables) {
-                returnUrl = returnUrl.replace(new RegExp(`{{${variableName}}}`, 'g'), randomMemberOfArray(requestConfig.variables[variableName]));
+                const variableValue = requestConfig.variables[variableName]
+
+                if (Array.isArray(variableValue)) {
+                    returnUrl = returnUrl.replace(new RegExp(`{{${variableName}}}`, 'g'), randomMemberOfArray(variableValue));
+                }
+                if (variableValue instanceof Function) {
+                    returnUrl = returnUrl.replace(new RegExp(`{{${variableName}}}`, 'g'), variableValue());
+                }
             }
         })
         return returnUrl
@@ -79,13 +107,13 @@ const updater = setInterval(progressPrint, 500);
 Object.keys(masterListOfRequests).forEach(group => {
     const groupArray = masterListOfRequests[group];
     if (!Array.isArray(groupArray) || groupArray.length === 0) {
-        console.log(`Skipped group ${group} as the array was empty`);
+        addReportLine(`Skipped group ${group} as the array was empty`);
         return;
     }
 
     const offset = groupArray[0].offset
 
-    console.log(`
+    addReportLine(`
     Testing group: ${group}
     Requests to perform: ${groupArray.length}
     Request offset: ${offset}
@@ -97,12 +125,22 @@ Object.keys(masterListOfRequests).forEach(group => {
         return new Promise((resolve) => {
             setTimeout(() => {
                 const startTime = Date.now();
-                request({
+                const options = {
                     method: req.verb,
                     url: req.url,
                     headers: req.headers
-                },
-                (error, response, body) => {
+                }
+
+                if (req.payload) {
+                    if (req.payload.json) {
+                        options.json = true
+                    }
+                    if (req.payload.body) {
+                        options.body = req.payload.body
+                    }
+                }
+
+                request(options, (error, response, body) => {
                     if (error) {
                         addResult(group, req.url, {statusCode: 0}, '', startTime, Date.now(), error);
                     } else {
@@ -121,8 +159,7 @@ Object.keys(masterListOfRequests).forEach(group => {
         .all(requestPromises)
         .then( () => {
             responseTimes = results.map(result => result.timeTaken)
-            fs.writeFileSync('results.json', JSON.stringify(results, null, 4));
-            console.log(`
+            addReportLine(`
         
             ${group} Complete.
 
@@ -148,5 +185,8 @@ Object.keys(masterListOfRequests).forEach(group => {
 Promise.all(masterPromises)
     .then(() => {
         clearInterval(updater)
+        addReportLine('Done.')
+        fs.writeFileSync(`results_${nowString}.json`, JSON.stringify(results, null, 4));
+        reportStream.end()
         console.log('All tests completed')
     })
