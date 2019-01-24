@@ -11,6 +11,7 @@
   "dependencies": {
     "ansi-escapes": "^3.1.0",
     "chalk": "^2.4.2",
+    "json-csv": "^2.0.3",
     "request": "^2.88.0"
   }
 }

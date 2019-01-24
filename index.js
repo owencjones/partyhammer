@@ -2,6 +2,7 @@ const fs = require('fs')
 const { cursorUp } = require('ansi-escapes')
 const request = require('request')
 const chalk = require('chalk')
+const { csvBuffered } = require('json-csv')
 
 const requestConfig = require('./requests')
 
@@ -189,7 +190,30 @@ Promise.all(masterPromises)
     .then(() => {
         clearInterval(updater)
         addReportLine('Done.')
-        fs.writeFileSync(`results_${nowString}.json`, JSON.stringify(results, null, 4));
         reportStream.end()
-        console.log('All tests completed')
+        fs.writeFile(`results_${nowString}.json`, JSON.stringify(results, null, 4), error => {
+            if (error) {
+                throw error
+            }
+            csvBuffered(results, {
+                fields:[
+                    { name: 'group', label: 'Group' },
+                    { name: 'statusCode', label: 'HTTP Response' },
+                    { name: 'timeInitiated', label: 'Start time' },
+                    { name: 'timeTaken', label: 'Response (ms)' },
+                    { name: 'url', label: 'URL' },
+                ]
+            }, (error, csv) => {
+                if (error) {
+                    throw error
+                }
+                fs.writeFile(`results_${nowString}.csv`, csv, error => {
+                    if (error) {
+                        throw error
+                    }
+                    
+                    console.log('All tests completed')
+                })
+            })
+        });
     })
