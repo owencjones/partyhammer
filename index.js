@@ -213,6 +213,7 @@ Promise.all(masterPromises)
                     }
                     
                     console.log('All tests completed')
+                    console.log(`results written to results_${nowString}.csv, and results_${nowString}.json`)
                 })
             })
         });
